@@ -92,9 +92,6 @@ class ShapeExtractor:
         self._coords = [0, 0]
         self._currentShape = []
 
-        self.logger = logger
-        self.log_type = logger.logType.PARSER
-
     def get_shapes(self):
         """Returns list found shapes in gcode, optionally omits the lead-in move"""
 
@@ -205,7 +202,6 @@ class ShapeExtractor:
 
             else:
                 return
-            self.logger.log(inst + " " + message, 0, self.log_type)
 
     def _go_straight(self, end):
         """Go in a straight line (can also be rapid travel move)"""
@@ -237,7 +233,6 @@ class ShapeExtractor:
             self._currentShape.append(self._coords.copy())
             self._shapeList.append(self._currentShape)
             self._currentShape = []
-            self.logger.log("Shape finished", 0, self.log_type)
 
     def _instruction_mode(self, inst):
         """Returns a number depending on instruction type"""  # TODO: Deprecate this

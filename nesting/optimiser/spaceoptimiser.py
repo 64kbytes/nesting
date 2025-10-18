@@ -1,4 +1,4 @@
-from shapely.geometry import Point, Polygon, box
+from shapely.geometry import Point, Polygon as ShapelyPolygon, box
 from shapely.geometry.polygon import orient
 from shapely import affinity
 from collections import defaultdict
@@ -31,12 +31,33 @@ _debug = False
 
 
 # extend Polygon to allow storing of NFPS
-class Polygon(Polygon):
-    shape_nfps = defaultdict()  # keys are wkts of shapes + hole offset, values are NFPS
-    name = "undefined"  # friendly name to identify the shape
-    position = [0, 0]  # position of the shape on the board (reference point is circle_center)
-    angle = 0  # angle of the shape
-    origin = [0, 0]
+class Polygon:
+
+    def __init__(self, *args, **kwargs):
+        self.geometry = ShapelyPolygon(*args, **kwargs)
+        self.shape_nfps = defaultdict()  # keys are wkts of shapes + hole offset, values are NFPS
+        self.name = "undefined"  # friendly name to identify the shape
+        self.position = [0, 0]  # position of the shape on the board (reference point is circle_center)
+        self.angle = 0  # angle of the shape
+        self.origin = [0, 0]
+
+    def simplify(self, *args, **kwargs):
+        return self.geometry.simplify(*args, **kwargs)
+
+    @property
+    def convex_hull(self):
+        return self.geometry.convex_hull
+
+    @property
+    def area(self):
+        return self.geometry.area
+
+    def buffer(self, *args, **kwargs):
+        return self.geometry.buffer(*args, **kwargs)
+
+    @property
+    def boundary(self):
+        return self.geometry.boundary
 
 
 class Optimiser:
@@ -254,9 +275,10 @@ class Optimiser:
 
     def addShapeAsHole(self, name="undefined"):
         """Adds a hole in the shape of the current shape with the current position"""
+
         newhole = Polygon(self.getShapeOriented())
         if self.convex_hull:
-            newhole = newhole.convex_hull
+            newhole = Polygon(newhole.convex_hull)
 
         newhole.shape_nfps = defaultdict()
         newhole.name = name
