@@ -1,9 +1,9 @@
 import sys
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
-from wasteoptimiser.api import api
-from wasteoptimiser.gui import figures, gui
-from wasteoptimiser.logger.logger import Logger
+from nesting.api import api
+from nesting.gui import figures, gui
+from nesting.logger.logger import Logger
 
 logger = Logger("logs", Logger.logLevel.INFO, Logger.logLevel.DEBUG)
 
@@ -11,8 +11,8 @@ logger = Logger("logs", Logger.logLevel.INFO, Logger.logLevel.DEBUG)
 wo = api.Api(logger)
 
 # create figures
-wo.figurePreview    = figures.Figures()
-wo.figureWorkspace  = figures.Figures()
+wo.figurePreview = figures.Figures()
+wo.figureWorkspace = figures.Figures()
 
 show_gui = True
 if show_gui:
@@ -25,11 +25,11 @@ if show_gui:
     mainWindow.setupCallbacks()
     mainWindow.show()
 
-    #logger.setPrintFunction(TODO:)
+    # logger.setPrintFunction(TODO:)
 
     # fast startup stuff
     try:
-        mainWindow.openFolder('./shapes')
+        mainWindow.openFolder("./shapes")
     except:
         pass
     mainWindow.applySettings()

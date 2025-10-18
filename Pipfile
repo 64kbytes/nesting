@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+shapely = "*"
+numpy = "*"
+pybind11 = "*"
+pyqt5 = "*"
+matplotlib = "*"
+ruff = "*"
+
+[dev-packages]
+ruff = "*"
+pytest = "*"
+
+[requires]
+python_version = "3.12"

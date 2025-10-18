@@ -1,0 +1,8 @@
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+#select = ["E", "F", "I", "N", "D"] # Example rules to select
+#ignore = ["E501"] # Example rules to ignore
+
+#[tool.ruff.lint]
+#extend-select = ["PTH"] # Extend selected rules with pathlib checks
