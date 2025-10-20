@@ -42,22 +42,37 @@ class Polygon:
         self.origin = [0, 0]
 
     def simplify(self, *args, **kwargs):
-        return self.geometry.simplify(*args, **kwargs)
+        return Polygon(self.geometry.simplify(*args, **kwargs))
 
     @property
     def convex_hull(self):
-        return self.geometry.convex_hull
+        return Polygon(self.geometry.convex_hull)
 
     @property
     def area(self):
         return self.geometry.area
 
     def buffer(self, *args, **kwargs):
-        return self.geometry.buffer(*args, **kwargs)
+        return Polygon(self.geometry.buffer(*args, **kwargs))
 
     @property
     def boundary(self):
         return self.geometry.boundary
+
+    @property
+    def exterior(self):
+        return self.geometry.exterior
+
+    def difference(self, polygon, **kwargs):
+        return Polygon(self.geometry.difference(polygon.geometry, **kwargs))
+
+    @property
+    def is_empty(self):
+        return self.geometry.is_empty
+
+    @property
+    def has_z(self):
+        return self.geometry.has_z
 
 
 class Optimiser:
@@ -240,11 +255,13 @@ class Optimiser:
 
             # print("ain't no place for this wicked")
             return False
+
         if self.small_first:
             beginpolys = [min(self.startpolygons, key=lambda x: x.area)]
         else:
             beginpolys = self.startpolygons
         beginpoints = []
+
         for beginpoly in beginpolys:
             beginpoints.extend(list(beginpoly.exterior.coords))
 
@@ -278,7 +295,7 @@ class Optimiser:
 
         newhole = Polygon(self.getShapeOriented())
         if self.convex_hull:
-            newhole = Polygon(newhole.convex_hull)
+            newhole = newhole.convex_hull
 
         newhole.shape_nfps = defaultdict()
         newhole.name = name
@@ -394,13 +411,11 @@ class Optimiser:
 
     def setShape(self, shape):
         """Sets the working shape. Expecting a list of points"""
-        self.shape = orient(Polygon(roundCoords(shape, 5)).simplify(1))
-        *self.circle_center, self.circle_radius = smallest_circle(
-            self.shape.exterior.coords
-        )  # [x, y, r]
-        self.shape = affinity.translate(
-            self.shape, -self.circle_center[0], -self.circle_center[1]
-        )
+
+        self.shape = Polygon(orient(Polygon(roundCoords(shape,5)).simplify(1).geometry))
+
+        *self.circle_center, self.circle_radius = smallest_circle(self.shape.exterior.coords)  # [x, y, r]
+        self.shape = affinity.translate(self.shape.geometry, -self.circle_center[0], -self.circle_center[1])
         centroid = self.shape.centroid
         self.centroid = [centroid.x, centroid.y]
 
@@ -415,19 +430,13 @@ class Optimiser:
     def getShapeOriented(self):
         """Returns a list of coordinates of the target shape in the current position and reotation"""
         rotated = affinity.rotate(self.shape, self.angle, origin=(0, 0))
-        translatedrotated = affinity.translate(
-            rotated, self.position[0], self.position[1]
-        )
+        translatedrotated = affinity.translate(rotated, self.position[0], self.position[1])
         return list(translatedrotated.boundary.coords)
 
     def getShapeOrientedDilated(self):
         """ "Returns the target shape dillated by the given amount"""
-        rotated = affinity.rotate(
-            self.shape.buffer(self.circle_radius / 2), self.angle, origin=(0, 0)
-        )
-        translatedrotated = affinity.translate(
-            rotated, self.position[0], self.position[1]
-        )
+        rotated = affinity.rotate(self.shape.buffer(self.circle_radius / 2), self.angle, origin=(0, 0))
+        translatedrotated = affinity.translate(rotated, self.position[0], self.position[1])
         return list(translatedrotated.boundary.coords)
 
     def getShapeNamesPositions(self):

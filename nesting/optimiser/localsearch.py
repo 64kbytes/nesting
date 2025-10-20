@@ -17,8 +17,8 @@ class LocalSearch:
         self.shape_buffer = shape.buffer(radius / 2)
         self.current_max = float("-inf")
         self.fail_counter = 0
-
-        self.tree = STRtree(holes)
+        breakpoint()
+        self.tree = STRtree([h.geometry for h in holes])
 
     def getRandomNeighbor(self, center, rand_func):
         return [c + rand_func() for c in center]
