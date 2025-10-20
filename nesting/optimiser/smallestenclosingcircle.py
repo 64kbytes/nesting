@@ -77,14 +77,12 @@ def _make_circle_two_points(points, p, q):
             continue
         elif cross > 0.0 and (
             left is None
-            or _cross_product(px, py, qx, qy, c[0], c[1])
-            > _cross_product(px, py, qx, qy, left[0], left[1])
+            or _cross_product(px, py, qx, qy, c[0], c[1]) > _cross_product(px, py, qx, qy, left[0], left[1])
         ):
             left = c
         elif cross < 0.0 and (
             right is None
-            or _cross_product(px, py, qx, qy, c[0], c[1])
-            < _cross_product(px, py, qx, qy, right[0], right[1])
+            or _cross_product(px, py, qx, qy, c[0], c[1]) < _cross_product(px, py, qx, qy, right[0], right[1])
         ):
             right = c
 
@@ -120,24 +118,8 @@ def make_circumcircle(a, b, c):
     d = (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)) * 2.0
     if d == 0.0:
         return None
-    x = (
-        ox
-        + (
-            (ax * ax + ay * ay) * (by - cy)
-            + (bx * bx + by * by) * (cy - ay)
-            + (cx * cx + cy * cy) * (ay - by)
-        )
-        / d
-    )
-    y = (
-        oy
-        + (
-            (ax * ax + ay * ay) * (cx - bx)
-            + (bx * bx + by * by) * (ax - cx)
-            + (cx * cx + cy * cy) * (bx - ax)
-        )
-        / d
-    )
+    x = ox + ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d
+    y = oy + ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d
     ra = math.hypot(x - a[0], y - a[1])
     rb = math.hypot(x - b[0], y - b[1])
     rc = math.hypot(x - c[0], y - c[1])
@@ -148,10 +130,7 @@ _MULTIPLICATIVE_EPSILON = 1 + 1e-14
 
 
 def is_in_circle(c, p):
-    return (
-        c is not None
-        and math.hypot(p[0] - c[0], p[1] - c[1]) <= c[2] * _MULTIPLICATIVE_EPSILON
-    )
+    return c is not None and math.hypot(p[0] - c[0], p[1] - c[1]) <= c[2] * _MULTIPLICATIVE_EPSILON
 
 
 # Returns twice the signed area of the triangle defined by (x0, y0), (x1, y1), (x2, y2).

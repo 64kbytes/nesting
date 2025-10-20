@@ -14,9 +14,7 @@ def pol2cart(rho, phi):
     return [x, y]
 
 
-def interpolateArc(
-    startAngle, endAngle, radius, clockwise=True, maxlength=1, maxangle=0.2
-):
+def interpolateArc(startAngle, endAngle, radius, clockwise=True, maxlength=1, maxangle=0.2):
     # radius = math.sqrt((ceter(0)-end(0))**2 + (center(1)-end(1))**2)
     angle = endAngle - startAngle
     if angle <= 0:

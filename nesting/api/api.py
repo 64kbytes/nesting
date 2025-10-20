@@ -60,9 +60,7 @@ class Api:
             elif self.optimiser.preffered_pos == 6:  # Top
                 pref = lambda p: p[1]
 
-            angles = list(
-                np.linspace(0, 360, self.settings.nfp_rotations, endpoint=False)
-            )
+            angles = list(np.linspace(0, 360, self.settings.nfp_rotations, endpoint=False))
             angles.append(self.optimiser.angle)
             start_points = []
             start_angles = []
@@ -76,9 +74,7 @@ class Api:
 
             if not start_points:
                 return False  # TODO: error code
-            max_index, max_value = max(
-                enumerate(start_points), key=lambda p: pref(p[1])
-            )
+            max_index, max_value = max(enumerate(start_points), key=lambda p: pref(p[1]))
             # print("index: ", max_index, "value: ", max_value)
             self.optimiser.position = max_value
             self.optimiser.angle = start_angles[max_index]
@@ -201,9 +197,7 @@ class Api:
             with open(file, "r") as f:
                 gcode = f.read()
             if gcode:
-                xtr = gcodeparser.ShapeExtractor(
-                    gcode, suppressLeadIn=True, logger=self.logger
-                )
+                xtr = gcodeparser.ShapeExtractor(gcode, suppressLeadIn=True, logger=self.logger)
                 xtr.run()
         except:
             self.logger.log(

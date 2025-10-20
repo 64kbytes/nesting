@@ -3,22 +3,30 @@ import numpy as np
 from shapely import affinity
 from shapely.geometry import Polygon
 from shapely.strtree import STRtree
+from nesting.optimiser.structs import Shape
 
 
 class LocalSearch:
-    def __init__(
-        self, shape, center, angle, radius, holes, board, hole_offset, edge_offset
-    ):
+    def __init__(self, shape: Shape, center, angle, radius, holes, board, hole_offset, edge_offset):
         # self.optimiser = optimiser
         self.offset = center
         self.angle = angle
-        self.shape = shape.buffer(hole_offset)
-        self.board = Polygon(board).buffer(hole_offset).buffer(-edge_offset)
+        self._shape = shape.buffer(hole_offset)
+        self.board = Shape(Polygon(board).buffer(hole_offset).buffer(-edge_offset))
         self.shape_buffer = shape.buffer(radius / 2)
         self.current_max = float("-inf")
         self.fail_counter = 0
-        breakpoint()
         self.tree = STRtree([h.geometry for h in holes])
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @shape.setter
+    def shape(self, shape):
+        if type(shape) is not Shape:
+            breakpoint()
+        self._shape = shape
 
     def getRandomNeighbor(self, center, rand_func):
         return [c + rand_func() for c in center]
@@ -61,9 +69,7 @@ class LocalSearch:
             ]
         )
         magic.reshape([1, 27 * 3])
-        magicmatrix = np.array(
-            [c * random.random() for c in magic.reshape([1, 27 * 3])[0]]
-        ).reshape([27, 3])
+        magicmatrix = np.array([c * random.random() for c in magic.reshape([1, 27 * 3])[0]]).reshape([27, 3])
         return (magicmatrix + center).tolist()
 
     def generateVicinity(self, point=None, angle=None, mode="uniform", count=20):
@@ -79,12 +85,10 @@ class LocalSearch:
             rf = lambda: random.randint(-10, 10)
         elif mode == "gauss":
             rf = lambda: random.gauss(0, 3)
-        vicinity.extend(
-            [self.getRandomNeighbor(center, rand_func=rf) for _ in range(count)]
-        )
+        vicinity.extend([self.getRandomNeighbor(center, rand_func=rf) for _ in range(count)])
         return vicinity
 
-    def getOverlapArea(self, shape=None, offset=None, angle=None):
+    def getOverlapArea(self, shape: Shape = None, offset=None, angle=None):
         if not shape:
             shape = self.shape_buffer
         if not offset:
@@ -92,13 +96,17 @@ class LocalSearch:
         if not angle:
             angle = self.angle
         area = 0
-        shape = affinity.translate(
-            affinity.rotate(shape, angle, origin=(0, 0)), *offset
-        )
+        shape = affinity.translate(affinity.rotate(shape.geometry, angle, origin=(0, 0)), *offset)
         overlaps = [h for h in self.tree.query(shape)]
-        for h in overlaps:
-            area += shape.intersection(h).area
-        area += shape.difference(self.board).area
+
+        for h in [h for h in overlaps if h > 0]:
+            try:
+                area += shape.intersection(self.tree.geometries.take(h)).area
+            except Exception as err:
+                breakpoint()
+                raise
+
+        area += shape.difference(self.board.geometry).area
         return area
 
     def getFitness(self, center=None, offset=None, angle=None):
@@ -110,9 +118,7 @@ class LocalSearch:
         if not angle:
             angle = self.angle
         area_shape = self.getOverlapArea(shape=self.shape, offset=offset, angle=angle)
-        area_buffer = self.getOverlapArea(
-            shape=self.shape_buffer, offset=offset, angle=angle
-        )
+        area_buffer = self.getOverlapArea(shape=self.shape_buffer, offset=offset, angle=angle)
         return area_buffer * (not area_shape) - area_shape
 
     def step(self):

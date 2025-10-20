@@ -7,9 +7,7 @@ from matplotlib.backends.backend_qt5agg import (
 
 import os
 
-Ui_MainWindow, QMainWindow = loadUiType(
-    os.path.join(os.path.dirname(__file__), "../resources/WasteOptimiserGUI.ui")
-)
+Ui_MainWindow, QMainWindow = loadUiType(os.path.join(os.path.dirname(__file__), "../resources/WasteOptimiserGUI.ui"))
 
 from nesting.optimiser.localsearch import LocalSearch  # TODO: REMOVE
 
@@ -128,9 +126,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def askFolder(self):
         """Opens a select folder dialog and then displays files from that folder"""
 
-        folder = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select folder", "../../"
-        )
+        folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select folder", "../../")
         self.openFolder(folder)
 
     def selectAndDrawShape(self, name):
@@ -155,20 +151,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.figure_preview.draw([[0, 0]], "r+")
             dimensions = self.api.getShapeDimensions()
             self.lb_preview_info.setText(
-                "Dimensions: "
-                + str(round(dimensions[0], 3))
-                + " x "
-                + str(round(dimensions[1], 3))
-                + " mm"
+                "Dimensions: " + str(round(dimensions[0], 3)) + " x " + str(round(dimensions[1], 3)) + " mm"
             )
         self.canvasPreview.draw()
 
     def applySettings(self):
         """Applies settings to the optimiser module"""
 
-        self.api.optimiser.setBoardSize(
-            (self.sb_settings_width.value(), self.sb_settings_height.value())
-        )
+        self.api.optimiser.setBoardSize((self.sb_settings_width.value(), self.sb_settings_height.value()))
         self.api.optimiser.hole_offset = self.sb_settings_hole_offset.value()
         self.api.optimiser.edge_offset = self.sb_settings_edge_offset.value()
         self.api.optimiser.preffered_pos = self.cb_settings_location.currentIndex()
@@ -330,9 +320,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def workspaceMouseMotion(self, event):
         x = clamp(event.xdata, 0, self.api.optimiser.width)
         y = clamp(event.ydata, 0, self.api.optimiser.height)
-        self.lb_workspace_info.setText(
-            self.info_message + " [" + str(round(x, 2)) + ", " + str(round(y, 2)) + "]"
-        )
+        self.lb_workspace_info.setText(self.info_message + " [" + str(round(x, 2)) + ", " + str(round(y, 2)) + "]")
 
         if self.mode == Mode.drawing or self.mode == Mode.subtracting:
             pointopt = "k+"
@@ -344,9 +332,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             if not self.first_point:
                 self.figure_workspace.draw((x, y), options=pointopt, gid="temp")
             else:
-                self.figure_workspace.draw(
-                    (self.last_point, (x, y)), options=lineopt, gid="temp"
-                )
+                self.figure_workspace.draw((self.last_point, (x, y)), options=lineopt, gid="temp")
                 self.figure_workspace.remove("last")
                 if (
                     abs(x - self.first_point[0]) < 50
@@ -364,9 +350,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.figure_workspace.draw((x, y), options="rX", gid="temp")
             self.hole_to_remove = self.api.optimiser.queryHole((x, y))
             if self.hole_to_remove:
-                self.figure_workspace.draw(
-                    self.hole_to_remove.boundary.coords, options="r-", gid="temp"
-                )
+                self.figure_workspace.draw(self.hole_to_remove.boundary.coords, options="r-", gid="temp")
             self.canvasWorkspace.draw()
 
     def workspaceMouseClicked(self, event):
@@ -382,9 +366,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.figure_workspace.remove("new_shape")
                 if not self.first_point:
                     self.first_point = (x, y)
-                    self.figure_workspace.draw(
-                        self.first_point, "ro", gid="first_point"
-                    )
+                    self.figure_workspace.draw(self.first_point, "ro", gid="first_point")
                 if self.close_to_last:
                     if self.mode == Mode.subtracting:
                         self.subtractShape()
@@ -394,9 +376,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 else:
                     self.last_point = (x, y)
                     self.drawn_shape.append(self.last_point)
-                    self.figure_workspace.draw(
-                        self.drawn_shape, options=shapeopt, gid="new_shape"
-                    )
+                    self.figure_workspace.draw(self.drawn_shape, options=shapeopt, gid="new_shape")
                     self.canvasWorkspace.draw()
             elif event.button == 3:  # right mouse button
                 self.cancelShape()
@@ -423,19 +403,13 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             print()
             self.drawWorkspace()
             self.figure_workspace.draw(self.api.optimiser.getShapeOriented())
-            self.figure_workspace.draw(
-                self.api.optimiser.getShapeOrientedDilated(), options="g:"
-            )
+            self.figure_workspace.draw(self.api.optimiser.getShapeOrientedDilated(), options="g:")
             while g_search.step():
                 self.api.optimiser.position = g_search.offset
                 self.api.optimiser.angle = g_search.angle
                 self.figure_workspace.draw(self.api.optimiser.getShapeOriented())
-                self.figure_workspace.draw(
-                    self.api.optimiser.getShapeOrientedDilated(), options="g:"
-                )
-            self.figure_workspace.draw(
-                self.api.optimiser.getShapeOriented(), options="r-"
-            )
+                self.figure_workspace.draw(self.api.optimiser.getShapeOrientedDilated(), options="g:")
+            self.figure_workspace.draw(self.api.optimiser.getShapeOriented(), options="r-")
             self.canvasWorkspace.draw()
 
     def checkUseNFP(self):
@@ -444,9 +418,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.sp_optimiser_nfp_rotations.setEnabled(checked)
 
     def checkLocalOptimisation(self):
-        self.api.settings.local_optimisation = (
-            self.cb_optimiser_local_optimisation.isChecked()
-        )
+        self.api.settings.local_optimisation = self.cb_optimiser_local_optimisation.isChecked()
 
     def setNFPRotations(self, number):
         self.api.settings.nfp_rotations = number
@@ -468,32 +440,22 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         gb.click_callback = self.selectAndDrawShape
 
         lbl = QtWidgets.QLabel(name)
-        splbl = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
-        )
+        splbl = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         splbl.setHorizontalStretch(3)
         lbl.setSizePolicy(splbl)
 
         spb = QtWidgets.QSpinBox()
-        spspb = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
-        )
+        spspb = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         spspb.setHorizontalStretch(1)
         spb.setSizePolicy(spspb)
-        spb.valueChanged.connect(
-            lambda x: self.api.setShapeCount(lbl.text(), spb.value())
-        )
+        spb.valueChanged.connect(lambda x: self.api.setShapeCount(lbl.text(), spb.value()))
 
         chkb = QtWidgets.QCheckBox("Convex")
         chkb.setChecked(True)
-        spchcb = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
-        )
+        spchcb = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         spchcb.setHorizontalStretch(1)
         chkb.setSizePolicy(spchcb)
-        chkb.stateChanged.connect(
-            lambda x: self.api.setShapeConvex(lbl.text(), bool(x))
-        )
+        chkb.stateChanged.connect(lambda x: self.api.setShapeConvex(lbl.text(), bool(x)))
 
         gbl.addWidget(spb)
         gbl.addWidget(lbl)
@@ -550,24 +512,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.pb_optimiser_start.clicked.connect(self.startOptimisation)
         self.pb_optimiser_stop.clicked.connect(self.api.stopPlacing)
         self.cb_optimiser_use_nfp.clicked.connect(self.checkUseNFP)
-        self.cb_optimiser_local_optimisation.clicked.connect(
-            self.checkLocalOptimisation
-        )
+        self.cb_optimiser_local_optimisation.clicked.connect(self.checkLocalOptimisation)
         self.sp_optimiser_nfp_rotations.valueChanged.connect(self.setNFPRotations)
 
         # debug
-        self.pb_optimiser_debug_add_as_hole.clicked.connect(
-            self.api.optimiser.addShapeAsHole
-        )
+        self.pb_optimiser_debug_add_as_hole.clicked.connect(self.api.optimiser.addShapeAsHole)
         self.pb_optimiser_debug_place_one.clicked.connect(self.debug_placeOneShape)
 
         # workspace figure callback
-        self.canvasWorkspace.mpl_connect(
-            "motion_notify_event", self.workspaceMouseMotion
-        )
-        self.canvasWorkspace.mpl_connect(
-            "button_press_event", self.workspaceMouseClicked
-        )
+        self.canvasWorkspace.mpl_connect("motion_notify_event", self.workspaceMouseMotion)
+        self.canvasWorkspace.mpl_connect("button_press_event", self.workspaceMouseClicked)
 
 
 if __name__ == "__main__":

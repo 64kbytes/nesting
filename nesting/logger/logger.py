@@ -20,17 +20,11 @@ class Logger:
     logType = logType
     logLevel = logLevel
 
-    def __init__(
-        self, log_file_dir=None, min_print_level=0, min_log_level=0, print_function=None
-    ):
+    def __init__(self, log_file_dir=None, min_print_level=0, min_log_level=0, print_function=None):
         self.min_log_level = min_log_level
         self.min_print_level = min_print_level
         self.print_function = print_function or print
-        self.log_file = (
-            self._create_log_file(log_file_dir, "WasteOptimiser")
-            if log_file_dir
-            else None
-        )
+        self.log_file = self._create_log_file(log_file_dir, "WasteOptimiser") if log_file_dir else None
 
     def log(self, message, level=0, ltype=0):
         if level >= self.min_log_level:
@@ -56,11 +50,5 @@ class Logger:
             return
         with open(self.log_file, "a") as out:
             out.write(
-                "\n"
-                + datetime.now().strftime("%H:%M:%S,")
-                + logType[ltype]
-                + ","
-                + logLevel[level]
-                + ","
-                + message
+                "\n" + datetime.now().strftime("%H:%M:%S,") + logType[ltype] + "," + logLevel[level] + "," + message
             )

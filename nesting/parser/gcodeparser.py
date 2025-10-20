@@ -19,9 +19,7 @@ def pol2cart(rho, phi):
     return [x, y]
 
 
-def interpolateArcAngle(
-    startAngle, endAngle, radius, clockwise=True, maxlength=1, maxangle=0.2
-):
+def interpolateArcAngle(startAngle, endAngle, radius, clockwise=True, maxlength=1, maxangle=0.2):
     """Returns a list of points along the specified arc from start to end, ommiting the endpoint"""
 
     angle = endAngle - startAngle
@@ -41,9 +39,7 @@ def interpolateArcAngle(
     if angle >= maxangle:
         asegments = int(angle / maxangle)
 
-    arcstops = list(
-        np.linspace(0, angle, max(lsegments, asegments) + 1, endpoint=False)
-    )
+    arcstops = list(np.linspace(0, angle, max(lsegments, asegments) + 1, endpoint=False))
     for arc in arcstops:
         points.append(pol2cart(radius, startAngle + arc * (1 - 2 * clockwise)))
     return points
@@ -111,9 +107,7 @@ class ShapeExtractor:
     def run(self):
         """Iterates over all instructions and extracts shapes"""
 
-        inst_iterator = iter(
-            self._instructions
-        )  # create iterator of instruction so we can call next()
+        inst_iterator = iter(self._instructions)  # create iterator of instruction so we can call next()
         for inst in inst_iterator:
             self._proccess_instruction(inst, inst_iterator)
 
@@ -159,13 +153,7 @@ class ShapeExtractor:
                         self._currentShape.append(self._coords.copy())
                     self._penDown = True
                     message = "pen down"
-                message += (
-                    " ["
-                    + str(round(self._coords[0], 5))
-                    + " "
-                    + str(round(self._coords[1], 5))
-                    + "]"
-                )
+                message += " [" + str(round(self._coords[0], 5)) + " " + str(round(self._coords[1], 5)) + "]"
 
                 if code == 1:  # straigh line (expexting X#.# Y#.#)
                     # TODO: add exception checking
@@ -217,9 +205,7 @@ class ShapeExtractor:
             center = list(map(add, center, self._coords))
         else:
             start = [0, 0]
-        points = interpolateArc(
-            start, end, center, is_clockwise, self.arcMaxLength, self.arcMaxAngle
-        )
+        points = interpolateArc(start, end, center, is_clockwise, self.arcMaxLength, self.arcMaxAngle)
         if not self._absoluteMove:
             points = [list(map(add, point, self._coords)) for point in points]
         self._currentShape.extend(points)
