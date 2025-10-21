@@ -63,3 +63,19 @@ class Shape:
     @property
     def wkt(self):
         return self.geometry.wkt
+
+    @property
+    def is_valid(self):
+        return self.geometry.is_valid
+
+    def intersects(self, other):
+        return self.geometry.intersects(other)
+
+    def contains(self, other):
+        return self.geometry.contains(other)
+
+    def touches(self, other):
+        return self.geometry.touches(other)
+
+    def union(self, other):
+        return self.geometry.union(other)

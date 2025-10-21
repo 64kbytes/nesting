@@ -1,6 +1,6 @@
 from shapely.geometry import Point, box
 from shapely.geometry.polygon import orient
-from shapely import affinity
+from shapely import affinity, unary_union
 from collections import defaultdict
 
 from nesting.optimiser.smallestenclosingcircle import (
@@ -234,7 +234,7 @@ class Optimiser:
             try:
                 beginpoints.extend(list(beginpoly.exterior.coords))
             except Exception:
-                raise
+                continue
 
         if self.preffered_pos == 0:  # top left
             pref = lambda p: -p[0] + p[1]
@@ -254,7 +254,7 @@ class Optimiser:
         try:
             beginpoint = max(beginpoints, key=pref)
         except Exception:
-            raise
+            return False
 
         self.position = beginpoint
         if _debug:
@@ -304,15 +304,15 @@ class Optimiser:
     def addHole(self, shape):
         """Adds a hole. Expecting a list of points ((x, y), ...)
         If the new hole intersects any existing one, it merges with it"""
-        new_hole = orient(Shape(shape))
+        new_hole = Shape(orient(Shape(shape).geometry))
         if not new_hole.is_valid:
             return False  # TODO: Error code
         new_hole.shape_nfps = defaultdict()  # clear cached NFPS
         holes_to_remove = []
         for hole in self.holes:
-            if new_hole.intersects(hole) and not new_hole.touches(hole):
+            if new_hole.intersects(hole.geometry) and not new_hole.touches(hole.geometry):
                 try:
-                    new_hole = Shape(new_hole.union(hole).exterior.coords)  # throw out interior
+                    new_hole = Shape(new_hole.union(hole.geometry).exterior.coords)  # throw out interior
                     new_hole.shape_nfps = defaultdict()  # clear cached NFPS
                 except:
                     print("error in adding hole")
