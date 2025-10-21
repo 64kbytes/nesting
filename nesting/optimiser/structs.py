@@ -55,3 +55,11 @@ class Shape:
         shape.origin = self.origin
         shape.centroid = self.centroid
         return shape
+
+    @property
+    def bounds(self):
+        return self.geometry.bounds
+
+    @property
+    def wkt(self):
+        return self.geometry.wkt

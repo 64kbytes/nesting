@@ -7,13 +7,18 @@ from nesting.optimiser.smallestenclosingcircle import (
     make_circle as smallest_circle,
 )
 from nesting.optimiser.structs import Shape
-from shapely.ops import unary_union
 
 try:
-    from nesting.nfp_interface.libnfporb_interface import genNFP
+
+    import sys, os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    import libnfporb_interface
+    genNFP = libnfporb_interface.genNFP
 
     _nfp_available = True
+
 except:
+    raise
     print(
         "\nlibnfporb_interface.pyd not found under nesting/nfp_interface/ or the binary is incompatible,\n"
         + "NFP option will not be available. Please see readme.md on instructions how to build the library."
@@ -55,7 +60,6 @@ class Optimiser:
 
         self.startpolygons = []  # lsit of possible starting polygons (polygons along which boundaries to start optimisation)
 
-
     @property
     def shape(self):
         return self._shape
@@ -72,7 +76,7 @@ class Optimiser:
 
     @property
     def shape_rotated(self):
-        return self.shape.clone(affinity.rotate(self.shape, self.angle, origin=(0, 0)))
+        return self.shape.clone(affinity.rotate(self.shape.geometry, self.angle, origin=(0, 0)))
 
     def getShapeHash(self):
         return hash(self.shape.wkt + str(self.hole_offset) + str(self.angle))
@@ -103,22 +107,27 @@ class Optimiser:
 
     def getNFPForHole(self, hole):
         shape_hash = self.getShapeHash()
+
         try:  # try to get cached NFP
             if _debug:
                 print("hole ", hole.wkt, " has cached nfp")
             return hole.shape_nfps[shape_hash]
 
         except KeyError:  # it does not exist
-            shapepoints = list(orient(self.shape_rotated).exterior.coords)
+            shapepoints = list(orient(self.shape_rotated.geometry).exterior.coords)
+
             if self.convex_hull:
-                shapepoints = list(orient(self.shape_rotated.convex_hull).exterior.coords)
-            holepoints = list(orient(hole.simplify(1)).exterior.coords)
+                shapepoints = list(orient(self.shape_rotated.convex_hull.geometry).exterior.coords)
+
+            holepoints = list(orient(hole.simplify(1).geometry).exterior.coords)
             holepoints = roundCoords(holepoints)
             trans = [-shapepoints[0][0], -shapepoints[0][1]]
             holepoints[0] = [holepoints[0][0] + 1, holepoints[0][1] + 1]  # hacky hack
             holepoints[-1] = holepoints[0]
             try:
                 nfps = genNFP(holepoints, shapepoints)
+            except TypeError:
+                raise
             except RuntimeError as err:
                 self.logger.log("WTF?: " + str(err), self.logger.logLevel.DEBUG, self.log_type)
                 holepoints = roundCoords(holepoints)
@@ -168,7 +177,7 @@ class Optimiser:
                 self.logger.log("OHSHIT!", logger.logLevel.WARNING, self.log_type)
 
             npolys = npolys.buffer(self.hole_offset, resolution=2)
-            npolys = affinity.translate(npolys, trans[0], trans[1])
+            npolys = affinity.translate(npolys.geometry, trans[0], trans[1])
             hole.shape_nfps[shape_hash] = npolys  # store the NFP in cache
             return npolys
 
@@ -182,7 +191,9 @@ class Optimiser:
         startpolygons = []
 
         for dhole in dilatedholes:
-            shrinkedboard = shrinkedboard.difference(dhole.geometry).simplify(1)
+            if type(dhole) is Shape:
+                dhole = dhole.geometry
+            shrinkedboard = shrinkedboard.difference(dhole).simplify(1)
 
         self.startpolygons = startpolygons
         if hasattr(shrinkedboard, "__getitem__"):
@@ -220,10 +231,9 @@ class Optimiser:
         beginpoints = []
 
         for beginpoly in beginpolys:
-
             try:
                 beginpoints.extend(list(beginpoly.exterior.coords))
-            except Exception as ee:
+            except Exception:
                 raise
 
         if self.preffered_pos == 0:  # top left
@@ -243,7 +253,7 @@ class Optimiser:
 
         try:
             beginpoint = max(beginpoints, key=pref)
-        except Exception as ee:
+        except Exception:
             raise
 
         self.position = beginpoint
@@ -377,7 +387,9 @@ class Optimiser:
         self.shape = Shape(orient(Shape(roundCoords(shape, 5)).simplify(1).geometry))
 
         *self.circle_center, self.circle_radius = smallest_circle(self.shape.exterior.coords)  # [x, y, r]
-        self.shape = self.shape.clone(affinity.translate(self.shape.geometry, -self.circle_center[0], -self.circle_center[1]))
+        self.shape = self.shape.clone(
+            affinity.translate(self.shape.geometry, -self.circle_center[0], -self.circle_center[1])
+        )
         self.centroid = self.shape.centroid
 
     def _getShape(self):
@@ -392,7 +404,9 @@ class Optimiser:
 
     def getShapeOrientedDilated(self):
         """ "Returns the target shape dillated by the given amount"""
-        rotated = self.shape.clone(affinity.rotate(self.shape.buffer(self.circle_radius / 2), self.angle, origin=(0, 0)))
+        rotated = self.shape.clone(
+            affinity.rotate(self.shape.buffer(self.circle_radius / 2), self.angle, origin=(0, 0))
+        )
         translatedrotated = affinity.translate(rotated, self.position[0], self.position[1])
         return list(translatedrotated.boundary.coords)
 

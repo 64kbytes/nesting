@@ -16,7 +16,7 @@ class Settings:
     hole_offset = 0
     location = "tl"
     input_path = None
-    use_nfp = False
+    use_nfp = True
     nfp_rotations = 1
     local_optimisation = True
 

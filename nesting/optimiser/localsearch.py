@@ -102,7 +102,7 @@ class LocalSearch:
         for h in [h for h in overlaps if h > 0]:
             try:
                 area += shape.intersection(self.tree.geometries.take(h)).area
-            except Exception as err:
+            except Exception:
                 breakpoint()
                 raise
 
